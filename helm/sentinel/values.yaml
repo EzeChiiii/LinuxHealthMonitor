@@ -1,0 +1,28 @@
+# Default values for sentinel.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+# values.yaml
+# Central configuration for the whole chart. Templates reference these
+# values instead of hardcoding anything, so the same chart can be
+# deployed differently just by overriding values — no template changes.
+
+api:
+  image: "kingchiiii/sentinel-api:latest"
+  port: 8000
+
+agent:
+  image: "kingchiiii/sentinel-agent:latest"
+
+frontend:
+  image: "kingchiiii/sentinel-frontend:latest"   # not pushed yet, placeholder for now
+  port: 3000
+
+postgres:
+  image: "timescale/timescaledb:latest-pg16"
+  port: 5432
+  storage: 5Gi
+
+redis:
+  image: "redis:7-alpine"
+  port: 6379
+  storage: 1Gi

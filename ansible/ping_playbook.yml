@@ -1,0 +1,25 @@
+# ping_playbook.yml
+# A minimal playbook to confirm Ansible can run actual tasks (not just
+# the built-in ping module) against our EC2 instance, before we write
+# anything that actually changes the server's configuration.
+
+- name: Verify connectivity and gather basic info
+  hosts: sentinel_servers
+  become: true   # run tasks with sudo, since installing software later will need root
+
+  tasks:
+    - name: Print the server's hostname
+      ansible.builtin.command: hostname
+      register: hostname_result
+
+    - name: Show the hostname
+      ansible.builtin.debug:
+        msg: "Connected to {{ hostname_result.stdout }}"
+
+    - name: Check Ubuntu version
+      ansible.builtin.command: lsb_release -a
+      register: version_result
+
+    - name: Show the version
+      ansible.builtin.debug:
+        msg: "{{ version_result.stdout_lines }}"

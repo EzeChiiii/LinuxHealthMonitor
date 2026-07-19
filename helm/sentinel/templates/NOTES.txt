@@ -1,0 +1,9 @@
+Sentinel has been deployed.
+
+Check pod status with:
+  kubectl get pods
+
+Check service status with:
+  kubectl get svc
+
+The frontend, once deployed, will be reachable via the frontend Service's external IP/port.

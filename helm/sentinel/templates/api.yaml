@@ -1,0 +1,52 @@
+# api.yaml
+# The FastAPI backend. Connects to postgres/redis using their
+# Kubernetes Service names — same "reach it by service name" pattern
+# as Docker Compose, just Kubernetes' version of internal DNS.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+        - name: api
+          image: {{ .Values.api.image }}
+          ports:
+            - containerPort: {{ .Values.api.port }}
+          env:
+            - name: DATABASE_URL
+              value: "postgresql+psycopg://sentinel:sentinel_dev_password@postgres:5432/sentinel"
+            - name: REDIS_URL
+              value: "redis://redis:6379"
+            - name: AGENT_SHARED_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: AGENT_SHARED_TOKEN
+            - name: DISCORD_WEBHOOK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DISCORD_WEBHOOK_URL
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+spec:
+  selector:
+    app: api
+  ports:
+    - port: {{ .Values.api.port }}
+      targetPort: {{ .Values.api.port }}
+  type: LoadBalancer

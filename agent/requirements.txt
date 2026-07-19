@@ -1,0 +1,8 @@
+psutil
+requests
+redis
+python-dotenv
+pydantic-settings
+docker
+dnspython
+docker

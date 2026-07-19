@@ -1,0 +1,32 @@
+# agent.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agent
+  template:
+    metadata:
+      labels:
+        app: agent
+    spec:
+      containers:
+        - name: agent
+          image: {{ .Values.agent.image }}
+          env:
+            - name: API_URL
+              value: "http://api:8000"
+            - name: REDIS_URL
+              value: "redis://redis:6379"
+            - name: HOST_NAME
+              value: "sentinel-k3s-agent"
+            - name: REPORT_INTERVAL_SECONDS
+              value: "10"
+            - name: AGENT_SHARED_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: AGENT_SHARED_TOKEN

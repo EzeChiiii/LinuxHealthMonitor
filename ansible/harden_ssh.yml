@@ -1,0 +1,53 @@
+# harden_ssh.yml
+# Creates a dedicated "deploy" user for automated deployments (kept
+# separate from "ubuntu", the default account), and disables SSH
+# password authentication so key-based auth is the only way in.
+
+# harden_ssh.yml
+- name: Harden SSH and create deploy user
+  hosts: sentinel_servers
+  become: true
+
+  tasks:
+    - name: Create deploy user
+      ansible.builtin.user:
+        name: deploy
+        groups: docker
+        append: true
+        shell: /bin/bash
+        create_home: true
+
+    - name: Set up .ssh directory for deploy user
+      ansible.builtin.file:
+        path: /home/deploy/.ssh
+        state: directory
+        owner: deploy
+        group: deploy
+        mode: "0700"
+
+    - name: Copy ubuntu's authorized_keys to deploy user
+      ansible.builtin.shell: |
+        cp /home/ubuntu/.ssh/authorized_keys /home/deploy/.ssh/authorized_keys
+        chown deploy:deploy /home/deploy/.ssh/authorized_keys
+        chmod 600 /home/deploy/.ssh/authorized_keys
+      args:
+        creates: /home/deploy/.ssh/authorized_keys
+
+    - name: Grant deploy user passwordless sudo
+      ansible.builtin.copy:
+        content: "deploy ALL=(ALL) NOPASSWD:ALL\n"
+        dest: /etc/sudoers.d/deploy
+        mode: "0440"
+
+    - name: Disable SSH password authentication
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^#?PasswordAuthentication"
+        line: "PasswordAuthentication no"
+      notify: Restart sshd
+
+  handlers:
+    - name: Restart sshd
+      ansible.builtin.systemd:
+        name: ssh
+        state: restarted

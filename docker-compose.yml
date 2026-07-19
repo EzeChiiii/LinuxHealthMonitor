@@ -1,0 +1,103 @@
+# docker-compose.yml
+# Full local stack: Postgres, Redis, API, agent, and frontend, all on
+# one shared Docker network. Services reach each other by name (e.g.
+# "postgres", "api") instead of localhost/host.docker.internal — Docker
+# Compose's internal DNS handles that automatically.
+
+services:
+
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    container_name: sentinel_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sentinel
+      POSTGRES_PASSWORD: sentinel_dev_password
+      POSTGRES_DB: sentinel
+    ports:
+      - "5432:5432"
+    volumes:
+      - sentinel_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sentinel"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: sentinel_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - sentinel_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: ./api
+    container_name: sentinel_api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Note: "postgres" and "redis" here are service names above,
+      # not localhost/host.docker.internal — Compose's internal DNS
+      # resolves them automatically.
+      DATABASE_URL: postgresql+psycopg://sentinel:sentinel_dev_password@postgres:5432/sentinel
+      REDIS_URL: redis://redis:6379
+      AGENT_SHARED_TOKEN: ${AGENT_SHARED_TOKEN}
+      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL}
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  agent:
+    build: ./agent
+    container_name: sentinel_agent
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      API_URL: http://api:8000
+      REDIS_URL: redis://redis:6379
+      AGENT_SHARED_TOKEN: ${AGENT_SHARED_TOKEN}
+      HOST_NAME: sentinel-agent-compose
+      REPORT_INTERVAL_SECONDS: "10"
+    # Mounts the host's Docker socket so this containerized agent can
+    # still discover and report on running Docker containers, same as
+    # it does when run directly on your Mac (Milestone 5's feature).
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+        NEXT_PUBLIC_AGENT_TOKEN: ${AGENT_SHARED_TOKEN}
+    container_name: sentinel_frontend
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      API_URL_INTERNAL: http://api:8000
+    ports:
+      - "3000:3000"
+
+volumes:
+  sentinel_pg_data:
+  sentinel_redis_data:

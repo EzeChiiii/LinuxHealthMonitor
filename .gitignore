@@ -5,6 +5,7 @@ __pycache__/
 .venv/
 venv/
 .env
+.env.local
 
 # Node / Next.js
 node_modules/
@@ -17,3 +18,13 @@ out/
 # Editor
 .vscode/
 .DS_Store
+
+# Terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.backup
+terraform/.terraform.lock.hcl
+terraform/sentinel-key.pem
+
+# Ansible
+ansible/*.retry

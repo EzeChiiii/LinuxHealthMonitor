@@ -1,0 +1,9 @@
+
+fastapi
+psycopg[binary]
+pydantic-settings
+python-dotenv
+redis
+requests
+sqlalchemy
+uvicorn[standard]

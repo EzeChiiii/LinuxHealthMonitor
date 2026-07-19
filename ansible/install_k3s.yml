@@ -1,0 +1,34 @@
+# install_k3s.yml
+# Installs k3s using its official install script. k3s ships as a
+# single binary that includes the Kubernetes control plane, kubelet,
+# and a lightweight container runtime — appropriate for a single-node
+# setup like this, unlike full upstream Kubernetes which assumes a
+# more complex multi-node architecture by default.
+
+- name: Install k3s
+  hosts: sentinel_servers
+  become: true
+
+  tasks:
+    - name: Download and run the k3s install script
+      ansible.builtin.shell: |
+        curl -sfL https://get.k3s.io | sh -
+      args:
+        creates: /usr/local/bin/k3s   # makes this idempotent — skips if k3s is already installed
+
+    - name: Wait for k3s to be ready
+      ansible.builtin.wait_for:
+        path: /etc/rancher/k3s/k3s.yaml
+        state: present
+        timeout: 60
+
+    - name: Ensure k3s service is running and enabled
+      ansible.builtin.systemd:
+        name: k3s
+        state: started
+        enabled: true
+
+    - name: Set permissions on kubeconfig so ubuntu user can read it
+      ansible.builtin.file:
+        path: /etc/rancher/k3s/k3s.yaml
+        mode: "0644"
