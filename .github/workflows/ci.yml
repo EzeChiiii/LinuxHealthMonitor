@@ -52,11 +52,11 @@ jobs:
             NEXT_PUBLIC_AGENT_TOKEN=${{ secrets.AGENT_SHARED_TOKEN }}
 
       - name: Scan image for vulnerabilities
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: kingchiiii/sentinel-${{ matrix.service }}:latest
           severity: CRITICAL,HIGH
-          exit-code: 0   # report but don't fail the build yet — flip to 1 once you've reviewed findings
+          exit-code: 0  # report but don't fail the build yet — flip to 1 once you've reviewed findings
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
