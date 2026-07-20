@@ -7,6 +7,8 @@
 # Full CI/CD pipeline: build all three images, scan for vulnerabilities
 # and secrets, push to Docker Hub, then deploy to the k3s cluster.
 
+# sgsg. 
+
 name: CI
 
 "on":
