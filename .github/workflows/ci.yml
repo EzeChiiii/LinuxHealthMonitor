@@ -3,6 +3,10 @@
 # API image, to prove the pipeline itself works end-to-end before we
 # add scanning, pushing, and deployment.
 
+# .github/workflows/ci.yml
+# Full CI/CD pipeline: build all three images, scan for vulnerabilities
+# and secrets, push to Docker Hub, then deploy to the k3s cluster.
+
 name: CI
 
 "on":
@@ -10,11 +14,71 @@ name: CI
     branches: [main]
 
 jobs:
-  build-api:
+  gitleaks:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # gitleaks needs full history, not just the latest commit
 
-      - name: Build API image
-        run: docker build -t sentinel-api:test ./api
+      - name: Scan for secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-and-scan:
+    needs: gitleaks
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [api, agent, frontend]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./${{ matrix.service }}
+          platforms: linux/amd64
+          tags: kingchiiii/sentinel-${{ matrix.service }}:latest
+          load: true
+          build-args: |
+            NEXT_PUBLIC_API_URL=http://${{ secrets.EC2_HOST }}:8000
+            NEXT_PUBLIC_AGENT_TOKEN=${{ secrets.AGENT_SHARED_TOKEN }}
+
+      - name: Scan image for vulnerabilities
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: kingchiiii/sentinel-${{ matrix.service }}:latest
+          severity: CRITICAL,HIGH
+          exit-code: 0   # report but don't fail the build yet — flip to 1 once you've reviewed findings
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Push image
+        run: docker push kingchiiii/sentinel-${{ matrix.service }}:latest
+
+  deploy:
+    needs: build-and-scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to k3s via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+            kubectl rollout restart deployment api
+            kubectl rollout restart deployment agent
+            kubectl rollout restart deployment frontend
