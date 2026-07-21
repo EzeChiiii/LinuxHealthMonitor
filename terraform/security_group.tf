@@ -14,11 +14,11 @@ resource "aws_security_group" "sentinel_sg" {
   # Opening port 22 to 0.0.0.0/0 is a common, avoidable mistake —
   # worth explicitly calling out as a security decision here.
   ingress {
-    description = "SSH from my IP only"
+    description = "SSH - temporarily open for GitHub Actions CI/CD, to be replaced with self-hosted runner"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["${chomp(data.http.my_ip.response_body)}/32"]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   # HTTP — the frontend/API need to be reachable. Open to everyone,

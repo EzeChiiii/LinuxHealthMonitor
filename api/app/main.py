@@ -39,7 +39,7 @@ def list_alert_events(db: Session = Depends(get_db), _: None = Depends(verify_ag
 # blocks cross-origin requests before they even reach us.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://44.198.182.11:3000"],  # frontend dev server and EC2 public IP
+    allow_origins=["http://localhost:3000", "http://3.234.48.52:3000"],  # frontend dev server and EC2 public IP
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
