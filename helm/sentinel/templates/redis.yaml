@@ -1,8 +1,4 @@
 # redis.yaml
-# Redis as a stateful workload — simpler than Postgres since there's
-# no credential Secret needed here (no auth configured, matching our
-# local dev setup). Same PVC + Deployment + Service pattern.
-
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -13,7 +9,6 @@ spec:
   resources:
     requests:
       storage: {{ .Values.redis.storage }}
-
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -37,19 +32,31 @@ spec:
           volumeMounts:
             - name: redis-storage
               mountPath: /data
+        - name: redis-exporter
+          image: oliver006/redis_exporter:latest
+          env:
+            - name: REDIS_ADDR
+              value: "redis://localhost:6379"
+          ports:
+            - containerPort: 9121
       volumes:
         - name: redis-storage
           persistentVolumeClaim:
             claimName: redis-pvc
-
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: redis
+  labels:
+    app: redis
 spec:
   selector:
     app: redis
   ports:
-    - port: {{ .Values.redis.port }}
+    - name: redis
+      port: {{ .Values.redis.port }}
       targetPort: {{ .Values.redis.port }}
+    - name: metrics
+      port: 9121
+      targetPort: 9121
