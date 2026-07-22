@@ -14,9 +14,15 @@ from app.redis_client import redis_client
 from datetime import datetime, timezone
 from app.notifications import send_discord_alert
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
 
 
 app = FastAPI(title="Sentinel API")
+
+# Exposes a /metrics endpoint with request counts, latencies, and
+# status codes per route — automatically instrumented, no manual
+# tracking needed for each endpoint.
+Instrumentator().instrument(app).expose(app) 
 
 @app.get("/health")
 def health_check():

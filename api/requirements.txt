@@ -7,3 +7,4 @@ redis
 requests
 sqlalchemy
 uvicorn[standard]
+prometheus-fastapi-instrumentator
