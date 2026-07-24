@@ -1,0 +1,28 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: sentinel-discord
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  route:
+    receiver: discord
+    groupBy: ['alertname']
+    groupWait: 10s
+    groupInterval: 5m
+    repeatInterval: 3h
+    matchers:
+      - matchType: "=~"
+        name: alertname
+        value: ".+"
+  receivers:
+    - name: discord
+      slackConfigs:
+        - apiURL:
+            name: discord-webhook-secret
+            key: url
+          channel: '#alerts'
+          sendResolved: true
+          title: '{{`{{ .CommonAnnotations.summary }}`}}'
+          text: '{{`{{ .CommonAnnotations.description }}`}}'
