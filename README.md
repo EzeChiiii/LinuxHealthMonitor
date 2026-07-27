@@ -26,6 +26,9 @@ Sentinel runs across two genuinely separate environments, connected only by outb
 
 **Proxmox homelab (the monitored fleet)** — a set of real Ubuntu VMs running on physical hardware at home, each each running a real healthcare interoperability application — MirthConnect (routes and transforms clinical messages between systems), HAPI-FHIR (a standards-based patient records API), and Orthanc (a medical imaging server for storing and retrieving X-rays/scans). A lightweight Python agent runs on each VM and reports its health outbound to the AWS-hosted API — the same way a monitoring agent would report to a SaaS observability platform in a real company.
 
+![Proxmox home lab virtual machines](docs/images/proxmox.png)
+
+
 **The key architectural point:** these two environments never talk to each other directly except through that one outbound path (homelab agent → AWS API, over plain HTTPS). The homelab doesn't run any part of the application itself, and the Kubernetes cluster doesn't run on the homelab — it's entirely separate, cloud-hosted infrastructure, deliberately mirroring how a real company might monitor on-premises infrastructure from a centralized, cloud-hosted monitoring platform.
 
 ## Structure
@@ -102,6 +105,12 @@ Beyond application-level metrics, Prometheus and Grafana also provide direct vis
 
 ![Grafana Kubernetes cluster dashboard](docs/images/Kubernetes-cluster.png)
 
+
+
+**Alerts firing and resolving correctly throughout the recovery process:**
+
+![Discord alert history showing alerts triggering and resolving](docs/images/discord-alerts.png)
+
 ## What I Built, Phase by Phase
 
 This project was built as 16 sequential milestones, grouped into four phases — each phase proven working before moving to the next.
@@ -118,11 +127,6 @@ This project was built as 16 sequential milestones, grouped into four phases —
 | 5. Agent — Docker metrics | Auto-discovery and reporting of Docker containers, nested under their parent host |
 | 6. Diagnostics + Redis pub/sub | Ping, traceroute, DNS lookup, port check, HTTP check — triggerable on demand via Redis |
 | 7. Alerting | Threshold-based alert rules, active/resolved state tracking, Discord webhook notifications |
-
-Alerts firing and resolving correctly throughout the recovery process:
-
-![Discord alert history showing alerts triggering and resolving](docs/images/discord-alerts.png)
-
 | 8. Frontend dashboard | Next.js UI — host list, per-host historical charts, diagnostic panel, alert history |
 
 </details>
