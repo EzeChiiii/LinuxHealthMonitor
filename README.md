@@ -28,6 +28,7 @@ Sentinel runs across two genuinely separate environments, connected only by outb
 
 ![Proxmox home lab virtual machines](docs/images/proxmox.png)
 
+![Home lab diagram](docs/images/homelab.png)
 
 **The key architectural point:** these two environments never talk to each other directly except through that one outbound path (homelab agent → AWS API, over plain HTTPS). The homelab doesn't run any part of the application itself, and the Kubernetes cluster doesn't run on the homelab — it's entirely separate, cloud-hosted infrastructure, deliberately mirroring how a real company might monitor on-premises infrastructure from a centralized, cloud-hosted monitoring platform.
 
@@ -103,8 +104,11 @@ Clicking into any host — including real Proxmox VMs on the homelab fleet — s
 
 Beyond application-level metrics, Prometheus and Grafana also provide direct visibility into every pod's actual resource footprint — CPU usage, network throughput, and packet rates — for `api`, `agent`, `frontend`, `postgres`, and `redis`, all running in the same Kubernetes namespace.
 
-![Grafana Kubernetes cluster dashboard](docs/images/Kubernetes-cluster.png)
+![Verifying the hosts table after recovery](docs/images/hosts-table.png)
 
+![Verifying the hosts table after recovery](docs/images/pods.png)
+
+![Grafana Kubernetes cluster dashboard](docs/images/Kubernetes-cluster.png)
 
 
 **Alerts firing and resolving correctly throughout the recovery process:**
@@ -168,7 +172,6 @@ This project was built as 16 sequential milestones, grouped into four phases —
 
 **Resolution:** Restored the correct `postgres.yaml` from my local, version-controlled copy, re-ran `helm upgrade` to recreate the Deployment and a fresh PersistentVolumeClaim, reapplied the database schema, and confirmed all hosts correctly re-registered with their parent/child relationships intact.
 
-![Verifying the hosts table after recovery](docs/images/hosts-table.png)
 
 **What I changed as a result:**
 - Never edit deployment files directly on a server again — all changes go through git, deployed from a single source of truth
