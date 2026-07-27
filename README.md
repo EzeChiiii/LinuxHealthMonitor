@@ -1,6 +1,6 @@
 # Sentinel
 
-***A self-hosted Linux health monitoring platform with on-demand network diagnostics, deployed as production-shaped, cloud-native infrastructure — built end-to-end to demonstrate the full DevOps lifecycle: Terraform, Ansible, Kubernetes, CI/CD, and observability.*
+***A self-hosted Linux health monitoring platform with on-demand network diagnostics, deployed as production-shaped, cloud-native infrastructure — built end-to-end to demonstrate the full DevOps lifecycle: Terraform, Ansible, Kubernetes, CI/CD, and observability.***
 
 [![CI/CD](https://github.com/EzeChiiii/LinuxHealthMonitor/actions/workflows/ci.yml/badge.svg)](https://github.com/EzeChiiii/LinuxHealthMonitor/actions/workflows/ci.yml)
 ![Terraform](https://img.shields.io/badge/Terraform-AWS-844FBA?logo=terraform&logoColor=white)
