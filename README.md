@@ -76,6 +76,32 @@ Sentinel's dashboard shows every monitored host at a glance, including Docker co
 
 ---
 
+
+
+**On-demand network diagnostics**
+
+Beyond passive metrics, hosts can be actively tested from the dashboard — ping, traceroute, DNS lookup, port checks, and HTTP checks, triggered on demand and executed by the agent running on that specific machine.
+
+![Diagnostic panel showing a completed ping check](docs/images/diagnostics-panel.png)
+![Diagnostic panel showing a completed ping check](docs/images/diagnostics-panel2.png)
+
+
+---
+
+**On-demand network diagnostics, live**
+
+Diagnostics triggered from the dashboard flow through the full chain — API, Redis pub/sub, and the agent, which receives and executes the request in real time. Below: the agent's live logs, showing multiple diagnostic types being received and completed.
+
+![Agent logs showing diagnostic requests received and processed in real time](docs/images/agent-diagnostic-logs.png)
+
+**Full API documentation, auto-generated**
+
+FastAPI generates interactive, testable API documentation automatically — every endpoint (`/hosts`, `/diagnostics`, `/alert-rules`, and more) is documented and callable directly from the browser.
+
+![FastAPI auto-generated Swagger documentation](docs/images/api-docs-swagger.png)
+
+---
+
 **PostgreSQL, observed through Prometheus and Grafana**
 
 Rather than relying only on Sentinel's own metrics, the database itself is instrumented with `postgres_exporter` and scraped by Prometheus — giving real transaction rates, connection counts, and resource usage for the database powering the whole application.
